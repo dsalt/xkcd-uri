@@ -24,38 +24,63 @@ version()
 
 usage()
 {
-  echo 'Usage: xkcd-uri [xkcd://NUMBER]'
+  echo "Usage: $0 [-n] [xkcd://NUMBER]"
 }
 
-# special case: today's cartoon
-if test $# == 0; then
-  exec xdg-open http://xkcd.com/
-fi
+LAUNCH=xdg-open
+
+case "$1" in
+  -n|--dry-run|--print-uri)
+    LAUNCH=echo
+    shift
+    ;;
+esac
 
 # should normally be one argument
-if test $# != 1; then
+if test $# -gt 1; then
   usage >&2
   exit 2
 fi
 
-# help, version
 case "$1" in
+
   -h|-?|--help)
     version
     usage
     exit 0
     ;;
+
   -v|--version)
     version
     exit 0
     ;;
+
+  "")
+    exec $LAUNCH http://xkcd.com/
+    ;;
+
+  xkcd://*)
+    CONTENT="$(printf "%s" "$1" | tr '
+' ' ' | sed -re 's%^xkcd://%%; s%/? *$%%')"
+    if echo "$CONTENT" | grep -q '^[0-9]\+$'; then
+      # Number. Strip leading zeroes, open the page
+      exec $LAUNCH "http://xkcd.com/$(echo "$CONTENT" | sed -e 's/^0*//')"
+    else
+      # Search string
+      # First step: decode
+      CONTENT="$(printf "%s" "$CONTENT" | perl -pne 's/[[:space:]]/ /g; s/\+/ /g; s/%([[:xdigit:]]{2})/chr(eval("0x$1"))/eg')"
+      # Now check the length
+      if test $(expr length "$CONTENT") -gt 31; then
+	echo "$0: search string is too long" >&2
+	exit 2
+      fi
+      # Re-encode the search string
+      CONTENT="$(printf "%s" "$CONTENT" | perl -pne 's/[\x00-\x1F%!#$&'\''()*+,\/:;=?@\[\]]/sprintf "%%%02X", ord $&/eg; s/ /+/g')"
+      # Launch the search (using id info grabbed from xkcd)
+      exec $LAUNCH "http://www.google.com/cse?cx=012652707207066138651:zudjtuwe28q&ie=UTF-8&q=$CONTENT"
+    fi
+    ;;
 esac
 
-# check URI, allow for one \n
-if echo "$1" | tr '
-' ' ' | grep -viq '^xkcd://[0-9]*\([0-9]/\)\? $'; then
-  echo 'xkcd-uri: URI is invalid' >&2
-  exit 2
-fi
-
-exec xdg-open "http://xkcd.com/$(echo "$1" | sed -e 's%^xkcd://%%i; s%/$%%')"
+echo 'xkcd-uri: URI is invalid' >&2
+exit 2
