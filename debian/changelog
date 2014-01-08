@@ -1,5 +1,5 @@
-xkcd-uri (0) unstable; urgency=low
+xkcd-uri (0.1) unstable; urgency=low
 
   * Initial packaging.
 
- -- Darren Salt <devspam@moreofthesa.me.uk>  Wed, 08 Jan 2014 02:01:43 +0000
+ -- Darren Salt <devspam@moreofthesa.me.uk>  Wed, 08 Jan 2014 20:02:45 +0000
