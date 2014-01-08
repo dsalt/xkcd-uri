@@ -1,4 +1,4 @@
-#! /bin/sh -e
+#! /usr/bin/perl -w
 #
 # xkcd URI launcher
 #
@@ -17,70 +17,99 @@
 #
 # i.e. distribute, alter etc. as you like!
 
-version()
+use integer;
+use Getopt::Long qw(:config bundling no_getopt_compat no_auto_abbrev); # no permute, no --opt=
+
+use constant {
+  VERSION_TEXT => "xkcd-uri version 0.1\n",
+  DESCRIPTION  => "xkcd-uri: using a browser, open an XKCD cartoon or search XKCD\n",
+  USAGE_TEXT   => "Usage: $0 [-n|--print-uri] [xkcd://][NUMBER|TEXT]\n",
+  LAUNCHER     => 'xdg-open',
+  BASE_URL     => 'http://xkcd.com/',
+  SEARCH_URL   => 'http://www.google.com/cse?cx=012652707207066138651:zudjtuwe28q&ie=UTF-8&q=',
+};
+
+# Output help, version or usage then exit
+
+sub show_version()
 {
-  echo 'xkcd-uri version 0'
+  print VERSION_TEXT;
+  exit 0;
 }
 
-usage()
+sub show_help()
 {
-  echo "Usage: $0 [-n] [xkcd://NUMBER]"
+  print DESCRIPTION, USAGE_TEXT;
+  exit 0;
 }
 
-LAUNCH=xdg-open
+sub usage()
+{
+  print STDERR USAGE_TEXT;
+  exit 2;
+}
 
-case "$1" in
-  -n|--dry-run|--print-uri)
-    LAUNCH=echo
-    shift
-    ;;
-esac
+# Launch or print URL then exit
 
-# should normally be one argument
-if test $# -gt 1; then
-  usage >&2
-  exit 2
-fi
+sub launch_print($)
+{
+  print "$_[0]\n";
+  exit 0;
+}
 
-case "$1" in
+sub launch_real($)
+{
+  exec LAUNCHER, $_[0];
+  exit 0;
+}
 
-  -h|-?|--help)
-    version
-    usage
-    exit 0
-    ;;
+# Option parsing
+my $printuri = 0;
+GetOptions ('h|help' => \&show_help,
+            'v|version' => \&show_version,
+            'n|print-uri' => \$printuri) or usage();
 
-  -v|--version)
-    version
-    exit 0
-    ;;
+# Select what to do with URLs
+my $launch = $printuri ? \&launch_print : \&launch_real;
 
-  "")
-    exec $LAUNCH http://xkcd.com/
-    ;;
+# No argument -> current cartoon
+&{$launch}(BASE_URL) if $#ARGV < 0;
 
-  xkcd://*)
-    CONTENT="$(printf "%s" "$1" | tr '
-' ' ' | sed -re 's%^xkcd://%%; s%/? *$%%')"
-    if echo "$CONTENT" | grep -q '^[0-9]\+$'; then
-      # Number. Strip leading zeroes, open the page
-      exec $LAUNCH "http://xkcd.com/$(echo "$CONTENT" | sed -e 's/^0*//')"
-    else
-      # Search string
-      # First step: decode
-      CONTENT="$(printf "%s" "$CONTENT" | perl -pne 's/[[:space:]]/ /g; s/\+/ /g; s/%([[:xdigit:]]{2})/chr(eval("0x$1"))/eg')"
-      # Now check the length
-      if test $(expr length "$CONTENT") -gt 31; then
-	echo "$0: search string is too long" >&2
-	exit 2
-      fi
-      # Re-encode the search string
-      CONTENT="$(printf "%s" "$CONTENT" | perl -pne 's/[\x00-\x1F%!#$&'\''()*+,\/:;=?@\[\]]/sprintf "%%%02X", ord $&/eg; s/ /+/g')"
-      # Launch the search (using id info grabbed from xkcd)
-      exec $LAUNCH "http://www.google.com/cse?cx=012652707207066138651:zudjtuwe28q&ie=UTF-8&q=$CONTENT"
-    fi
-    ;;
-esac
+# Treat all remaining arguments as a single string
+my $content = join(' ', @ARGV); # <- this is tainted, but we're not interested in that
 
-echo 'xkcd-uri: URI is invalid' >&2
-exit 2
+# Strip protocol info _and_ any trailing slash
+my $is_uri = 0;
+if ($content =~ /^xkcd:\/\//)
+{
+  $content =~ s%^xkcd://(.*?)/?$%$1%msi;
+  $is_uri = 1;
+}
+
+# Empty -> current cartoon
+&{$launch}(BASE_URL . $content) if $content eq '';
+
+# Bare number -> specific cartoon
+&{$launch}(BASE_URL . $content) if $content =~ /^[0-9]+$/;
+
+# If we reach this point, we have text; so launch a search page
+
+# URI decode if needed
+if ($is_uri)
+{
+  $content =~ s/\+/ /g;
+  $content =~ s/%([[:xdigit:]]{2})/chr(eval("0x$1"))/eg if $is_uri;
+}
+
+# Collapse spaces
+$content =~ s/[[:space:]]+/ /g;
+
+# Length check
+# die "$0: search string is too long" if length($content) > 31;
+
+# URI encode
+$content =~ s~([\x00-\x1F%!#$%&'()*+,/:;=?@\[\]])~sprintf "%%%02X", ord $1~eg;
+$content =~ s/ /+/g;
+
+# Launch
+&{$launch}(SEARCH_URL . $content);
