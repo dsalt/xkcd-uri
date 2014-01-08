@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Exec=/usr/bin/xkcd-uri %u
+StartupNotify=true
+Terminal=false
+NoDisplay=true
+Categories=Utility;
+MimeType=x-scheme-handler/xkcd
+Name=XKCD URI launcher
+Comment=Utterly silly and pointless

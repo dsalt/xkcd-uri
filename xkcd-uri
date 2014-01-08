@@ -1,0 +1,61 @@
+#! /bin/sh -e
+#
+# xkcd URI launcher
+#
+#   DO WHAT THOU WILT PUBLIC LICENCE
+#
+#   Copyright 2014 Darren Salt <devspam@moreofthesa.me.uk>
+#
+#   All are permitted to copy and distribute verbatim or modified copies of
+#   this licence document. Changing it is allowed as long as the name is
+#   changed.
+#
+#   DO WHAT THOU WILT PUBLIC LICENCE
+#   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION 
+#
+#   0. Do what thou wilt shall be the whole of this licence.
+#
+# i.e. distribute, alter etc. as you like!
+
+version()
+{
+  echo 'xkcd-uri version 0'
+}
+
+usage()
+{
+  echo 'Usage: xkcd-uri [xkcd://NUMBER]'
+}
+
+# special case: today's cartoon
+if test $# == 0; then
+  exec xdg-open http://xkcd.com/
+fi
+
+# should normally be one argument
+if test $# != 1; then
+  usage >&2
+  exit 2
+fi
+
+# help, version
+case "$1" in
+  -h|-?|--help)
+    version
+    usage
+    exit 0
+    ;;
+  -v|--version)
+    version
+    exit 0
+    ;;
+esac
+
+# check URI, allow for one \n
+if echo "$1" | tr '
+' ' ' | grep -viq '^xkcd://[0-9]*\([0-9]/\)\? $'; then
+  echo 'xkcd-uri: URI is invalid' >&2
+  exit 2
+fi
+
+exec xdg-open "http://xkcd.com/$(echo "$1" | sed -e 's%^xkcd://%%i; s%/$%%')"

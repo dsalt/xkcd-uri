@@ -1,0 +1,18 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: xkcd-uri
+
+Files: *
+Copyright: 2014 Darren Salt <devspam@moreofthesa.me.uk>
+License: Do What Thou Wilt
+ DO WHAT THOU WILT PUBLIC LICENCE
+ .
+ Copyright 2014 Darren Salt <devspam@moreofthesa.me.uk>
+ .
+ All are permitted to copy and distribute verbatim or modified copies of
+ this licence document. Changing it is allowed as long as the name is
+ changed.
+ .
+ DO WHAT THOU WILT PUBLIC LICENCE
+ TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION 
+ .
+ 0. Do what thou wilt shall be the whole of this licence.
