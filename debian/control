@@ -7,7 +7,7 @@ Standards-Version: 3.9.5
 
 Package: xkcd-uri
 Architecture: all
-Depends: xdg-utils, ${misc:Depends}
+Depends: xdg-utils, ${misc:Depends}, ${perl:Depends}
 Description: launcher for xkcd:// URIs
  xkcd-uri is a trivial launcher for xkcd:// URIs.
  Its purpose is amusement, and this is fulfilled.
