@@ -17,6 +17,41 @@
 #
 # i.e. distribute, alter etc. as you like!
 
+=head1 NAME
+
+xkcd-uri - using a browser, open an XKCD cartoon or search XKCD
+
+=head1 SYNOPSIS
+
+B<xkcd-uri> [B<-n>|B<--print-uri>] [xkcd://][I<NUMBER>|I<TEXT>]
+
+=head1 DESCRIPTION
+
+B<xkcd-uri> is a simple program which instructs your browser to open a
+specific XKCD cartoon or search available XKCD cartoons.
+
+B<xdg-open> is used to launch the URL.
+
+=head1 OPTIONS
+
+=over 12
+
+=item B<-n>, B<--print-uri>
+
+Print the URL instead of launching it.
+
+=back
+
+=head1 AUTHOR
+
+Darren Salt
+
+=head1 SOURCE
+
+L<xkcd-uri source on Github|https://github.com/dsalt/xkcd-uri>
+
+=cut
+
 use integer;
 use Getopt::Long qw(:config bundling no_getopt_compat no_auto_abbrev); # no permute, no --opt=
 
